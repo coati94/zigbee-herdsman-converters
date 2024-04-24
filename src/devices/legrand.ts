@@ -571,6 +571,38 @@ const definitions: Definition[] = [
         },
     },
     {
+        zigbeeModel: [' Mobile outlet\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000'],
+        model: '064887',
+        vendor: 'Legrand',
+        description: 'Power socket with power consumption monitoring',
+        ota: ota.zigbeeOTA,
+        fromZigbee: [fz.identify, fz.on_off, fz.electrical_measurement, fz.power_on_behavior, fzLegrand.cluster_fc01],
+        toZigbee: [tz.on_off, tzLegrand.led_mode, tzLegrand.identify, tz.power_on_behavior],
+        exposes: [
+            e.switch(),
+            e.action(['identify']),
+            e.power(),
+            e.power_apparent(),
+            e.power_on_behavior(),
+            eLegrand.identify(),
+            eLegrand.ledInDark(),
+            eLegrand.ledIfOn(),
+        ],
+        configure: async (device, coordinatorEndpoint) => {
+            const endpoint = device.getEndpoint(1);
+            await reporting.bind(endpoint, coordinatorEndpoint, ['genIdentify', 'genOnOff', 'haElectricalMeasurement']);
+            await reporting.onOff(endpoint);
+            await reporting.readEletricalMeasurementMultiplierDivisors(endpoint);
+            await reporting.activePower(endpoint);
+            try {
+                await reporting.apparentPower(endpoint);
+            } catch (e) {
+                // Some version/firmware don't seem to support this.
+                // https://github.com/Koenkk/zigbee2mqtt/issues/16732
+            }
+        },
+    },
+    {
         zigbeeModel: ['Hospitality on off switch'],
         model: 'WNAL10/WNRL10',
         vendor: 'Legrand',
